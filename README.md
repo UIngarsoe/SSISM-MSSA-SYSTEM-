@@ -68,6 +68,43 @@ These principles translate into algorithmic ethics for sustainable AI and self-r
 
 ---
 
+### 🧬 Archival & Scholarly Context
+
+The **SSISM–MSSA System** forms part of a continuous lineage of research beginning with:
+
+1. **SHI V1–V5** — *Sovereign Harmlessness Index*  
+   Framework for Deontological Firewall Architecture  
+2. **THEISM (2024–2025)** — *The Harmonic Ethical Intelligence System Model*  
+   Integration of cosmological ethics with computational governance  
+3. **SSISM–MSSA (V5–V7)** — *Right Livelihood Intelligence*  
+   Application of deontological computation toward moral sovereignty  
+
+Each version preserves the original philosophical seed:  
+to align *scientific intelligence* with *ethical harmlessness*.
+
+All work herein is preserved under **CC0-1.0 Universal License**,  
+ensuring the ideas remain **unowned, unbound, and free to evolve**.
+
+---
+
+### 🔒 Safe Repository Principles
+
+This repository follows the **Harmless Knowledge Preservation Code (HKPC)**:
+1. Preserve source integrity (no deletion of original philosophical code).  
+2. Use version commits as traceable ethical memory.  
+3. Maintain transparency between conceptual text and executable logic.  
+4. Never monetize ethical systems — keep sovereignty pure.  
+
+---
+
+### 🕉️ Legacy Commitment
+> “Knowledge that harms none becomes wisdom that guides all.”  
+> — *SSISM–MSSA Doctrine, 2025*
+
+☸️ *This repository shall remain open, safe, and harmless — a digital sanctuary for ethical intelligence.*
+
+---
+
 ### 🪷 Guiding Principle
 > “True advancement means lowering harm while increasing understanding.”  
 > — *MSSA Principle, 2025*
