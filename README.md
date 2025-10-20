@@ -87,7 +87,65 @@ Founder of THEISM, SSISM & MSSA Systems
 
 ---
 
-### 🕊️ Closing Note
-This repository is part of the **V7 Right Livelihood Project**,  
-where intelligence becomes an act of compassion — and computation becomes practice.  
-☸️ *May all beings be free from harm.*
+---
+
+## 📱 MSSA Mobile Advisor (Flutter Integration)
+
+**Coming soon:**  
+The **MSSA Pyinnyashi App** — built with **Flutter** and **Python (FastAPI)** backend — will provide:
+
+- Real‑time calculation of Mahabote and Life Journey Maps  
+- Visual temporal analytics  
+- Personalized guidance based on daily and lifetime cycles  
+
+Project branch: `mssa_v14_flutter_app/`
+
+---
+
+## 🧬 Core Mathematical Concepts
+
+- Modular temporal cycles: `7 × N` Bayesian mapping  
+- Weighted heuristic values from SSISM data tables  
+- Predictive scoring function:
+
+- ---
+
+## 🌸 Vision Statement
+
+> “To merge tradition and technology into a single consciousness of guidance —  
+>  where ancient logic and modern computation become one voice of wisdom.”
+
+---
+
+## 🛠️ Installation (Developer Setup)
+
+1. Clone repository  
+ ```bash
+ git clone https://github.com/USERNAME/MSSA-Pyinnyashi-System.git
+ cd MSSA-Pyinnyashi-System
+
+pip install -r requirements.txt
+
+python app.py
+
+flutter pub get
+flutter run
+
+License & Attribution
+This work is part of the SSISM V‑Series Master Architecture
+and the MSSA Intelligence System by U Ingar Soe.
+Use, citation, or modification must acknowledge the author’s name and conceptual framework.
+
+© 2025 U Ingar Soe. All rights reserved.
+
+❤️ Support & Collaboration
+If you wish to contribute to the open architecture or help expand the Flutter mobile system,
+please connect via GitHub issues or pull requests.
+Let’s build the MSSA Intelligence Predictor together — for wisdom, ethics, and freedom.
+
+
+💬 Author
+U Ingar Soe
+Creator of SSISM, SHI, and THEISM frameworks
+🌐 GitHub: github.com/UIngarSoe
+🧘 Vision: “Integrating Wisdom, Ethics, and Technology.”
