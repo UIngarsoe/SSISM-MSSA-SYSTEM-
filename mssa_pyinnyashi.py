@@ -10,7 +10,6 @@ import datetime as dt
 from typing import List, Dict, Any
 
 # === 1. MSSA PYINNYASHI CONFIGURATION ===
-# Mahabote planetary mapping (Day Index -> Mahabote data)
 MAHABOTE_DATA: Dict[int, Dict[str, Any]] = {
     0: {'planet': 'Sun', 'value': 1, 'period': 6, 'house_name': 'Impermanence/Inconstant', 'sequence': [1, 6, 4, 2, 7, 5, 3]},
     1: {'planet': 'Moon', 'value': 2, 'period': 15, 'house_name': 'Extremity/Danger', 'sequence': [2, 7, 5, 3, 1, 6, 4]},
@@ -22,7 +21,6 @@ MAHABOTE_DATA: Dict[int, Dict[str, Any]] = {
     7: {'planet': 'Rahu', 'value': 8, 'period': 12, 'house_name': 'Extremity/Inconstancy', 'sequence': [8, 5, 3, 1, 6, 4, 2]},
 }
 
-# House mapping: remainder -> house information
 HOUSE_MAP: Dict[int, Dict[str, Any]] = {
     1: {'planet_value': 1, 'name': 'Impermanence', 'ruler': 'Sun'},
     2: {'planet_value': 2, 'name': 'Extremity', 'ruler': 'Moon'},
@@ -39,52 +37,56 @@ HOUSE_MAP: Dict[int, Dict[str, Any]] = {
 def calculate_mahabote_house(dob: dt.date, current_date: dt.date, day_value: int) -> Dict[str, Any]:
     """
     Calculates the current Mahabote House and age.
-    H = (Age + Day Value) mod 7
+    Formula: H = (Age + Day Value) mod 7
     """
-    age_in_years = current_date.year - dob.year - ((current_date.month, current_date.day) < (dob.month, dob.day))
-    remainder = (age_in_years + day_value) % 7
-    remainder_for_mapping = remainder if remainder != 0 else 0
-    house_result = HOUSE_MAP.get(remainder_for_mapping)
-
+    age = current_date.year - dob.year - ((current_date.month, current_date.day) < (dob.month, dob.day))
+    remainder = (age + day_value) % 7
+    house_key = remainder if remainder != 0 else 0
+    house_info = HOUSE_MAP.get(house_key)
     return {
-        "age": age_in_years,
+        "age": age,
         "current_house_remainder": remainder if remainder != 0 else 7,
-        "house_info": house_result
+        "house_info": house_info
     }
 
 
 def generate_life_journey_map(dob: dt.date, birth_day_idx: int) -> List[Dict[str, Any]]:
     """
-    Generates the entire life house cycle map based on the starting planet/period.
+    Generates a complete life journey map with house cycles.
+    Handles Rahu and modular cycle wraparounds correctly.
     """
     journey = []
     current_date = dob
-    start_house_value = MAHABOTE_DATA[birth_day_idx]['value']
+    start_value = MAHABOTE_DATA[birth_day_idx]['value']
 
     for i in range(7):
-        # Adjust value for cycle wraparound and Rahu special case
-        if start_house_value == 8 and i == 0:
-            current_planet_value = 8
-        elif start_house_value == 8:
-            current_planet_value = (i) % 7
-            if current_planet_value == 0: current_planet_value = 7
+        # Determine current house value with modular arithmetic
+        if start_value == 8 and i == 0:
+            current_house_value = 8  # Rahu first block
+        elif start_value == 8:
+            current_house_value = (i % 7) or 7
         else:
-            current_planet_value = (start_house_value + i) % 7
-            if current_planet_value == 0: current_planet_value = 7
+            current_house_value = ((start_value + i - 1) % 7) + 1
 
-        data = next((d for d in MAHABOTE_DATA.values() if d['value'] == current_planet_value), None)
-        if data:
-            start_date_str = current_date.strftime("%Y-%m-%d")
-            end_date = current_date.replace(year=current_date.year + data['period'])
-            end_date_str = end_date.strftime("%Y-%m-%d")
+        # Lookup Mahabote data
+        house_data = next((d for d in MAHABOTE_DATA.values() if d['value'] == current_house_value), None)
+        if house_data:
+            start_str = current_date.strftime("%Y-%m-%d")
+            # Safely handle year increments (leap years)
+            try:
+                end_date = current_date.replace(year=current_date.year + house_data['period'])
+            except ValueError:
+                # February 29 fallback
+                end_date = current_date.replace(year=current_date.year + house_data['period'], day=28)
+            end_str = end_date.strftime("%Y-%m-%d")
 
             journey.append({
-                "period": i + 1,
-                "house_value": current_planet_value,
-                "house_name": data['house_name'],
-                "duration": data['period'],
-                "start_date": start_date_str,
-                "end_date": end_date_str
+                "period_index": i + 1,
+                "house_value": current_house_value,
+                "house_name": house_data['house_name'],
+                "duration_years": house_data['period'],
+                "start_date": start_str,
+                "end_date": end_str
             })
             current_date = end_date
 
@@ -100,63 +102,60 @@ def calculate_inga_wizar_map(
     sunset: dt.time
 ) -> List[Dict[str, Any]]:
     """
-    Calculates the 7 daily temporal blocks based on planetary sequence.
+    Computes 7 temporal blocks for a single day using planetary sequences.
     """
     if birth_day_idx == 3 and 7 in MAHABOTE_DATA:
-        birth_day_idx = 7  # Handle Rahu for Wednesday Afternoon
+        birth_day_idx = 7  # Rahu adjustment
 
     sequence = MAHABOTE_DATA[birth_day_idx]['sequence']
     day_start = dt.datetime.combine(current_date, sunrise)
     day_end = dt.datetime.combine(current_date, sunset)
-    day_length = day_end - day_start
-    block_duration = day_length / 7
+    block_length = (day_end - day_start) / 7
 
-    time_map = []
+    blocks = []
     current_time = day_start
 
-    for i, house_value in enumerate(sequence):
-        end_time = current_time + block_duration
-        if house_value == 8:
-            house_name = "Rahu/Extremity"
-        else:
-            house_name = next((h['name'] for h in HOUSE_MAP.values() if h['planet_value'] == house_value), "N/A")
-
-        time_map.append({
-            "block": i + 1,
-            "planet_value": house_value,
+    for idx, value in enumerate(sequence):
+        end_time = current_time + block_length
+        house_name = "Rahu/Extremity" if value == 8 else next((h['name'] for h in HOUSE_MAP.values() if h['planet_value'] == value), "N/A")
+        blocks.append({
+            "block_index": idx + 1,
+            "planet_value": value,
             "start_time": current_time.strftime("%H:%M:%S"),
             "end_time": end_time.strftime("%H:%M:%S"),
-            "mahabote_meaning": house_name
+            "house_name": house_name
         })
         current_time = end_time
 
-    return time_map
+    return blocks
 
 
-# === 4. MSSAPredictor CLASS FOR FASTAPI INTEGRATION ===
+# === 4. MSSAPredictOR CLASS ===
 
 class MSSAPredictor:
     """
-    Encapsulates Mahabote and Inga Wizar calculations for API use.
+    Core engine for FastAPI integration.
     """
 
     def generate_guidance(self, name: str, birth_date: str, house_cycle: int) -> Dict[str, Any]:
         dob = dt.datetime.strptime(birth_date, "%Y-%m-%d").date()
-        current_date = dt.date.today()
-        house_info = calculate_mahabote_house(dob, current_date, house_cycle)
-        journey_map = generate_life_journey_map(dob, house_cycle)
+        today = dt.date.today()
+        house_info = calculate_mahabote_house(dob, today, house_cycle)
+        journey = generate_life_journey_map(dob, house_cycle)
 
         return {
             "guidance": f"Dear {name}, your current Mahabote House is {house_info['house_info']['name']}.",
             "score": house_info['current_house_remainder'],
-            "journey": journey_map
+            "journey_map": journey
         }
 
 
-# === 5. OPTIONAL TEST USAGE ===
+# === 5. OPTIONAL TEST RUN ===
 if __name__ == "__main__":
-    dob_example = dt.date(1967, 5, 30)
-    house_example = calculate_mahabote_house(dob_example, dt.date.today(), 3)
-    journey_example = generate_life_journey_map(dob_example, 2)
-    print("Current House:", house_example)
-    print("Life Journey Map:", journey_example)
+    dob_sample = dt.date(1967, 5, 30)
+    current_house = calculate_mahabote_house(dob_sample, dt.date.today(), 3)
+    journey = generate_life_journey_map(dob_sample, 3)
+    print("Current Mahabote House:", current_house)
+    print("Life Journey Map:")
+    for p in journey:
+        print(f"Period {p['period_index']}: {p['house_name']} ({p['start_date']} → {p['end_date']})")
