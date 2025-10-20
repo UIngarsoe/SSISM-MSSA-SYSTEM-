@@ -1,1 +1,114 @@
-<script src="https://cdn.jsdelivr.net/npm/pyodide"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MSSA Pyinnyashi Demo</title>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"></script>
+<style>
+  body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+  input, button { padding: 8px; margin: 5px; }
+  #output { margin-top: 20px; background: #fff; padding: 15px; border-radius: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+  pre { white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<h1>MSSA Pyinnyashi System (V14) Demo</h1>
+
+<label>Name: <input type="text" id="name" value="Ingar Soe"></label><br>
+<label>Birth Date (YYYY-MM-DD): <input type="text" id="birth_date" value="1967-05-30"></label><br>
+<label>House Cycle (0-7): <input type="number" id="house_cycle" value="3" min="0" max="7"></label><br>
+<button id="runBtn">Generate Guidance</button>
+
+<div id="output"><strong>Output will appear here...</strong></div>
+
+<script type="text/javascript">
+let pyodideReadyPromise = loadPyodide({indexURL: "https://cdn.jsdelivr.net/pyodide/v0.25.0/full/"});
+
+async function runMSSA() {
+    const name = document.getElementById('name').value;
+    const birth_date = document.getElementById('birth_date').value;
+    const house_cycle = parseInt(document.getElementById('house_cycle').value);
+
+    const pyodide = await pyodideReadyPromise;
+
+    // Load MSSA Pyinnyashi engine dynamically
+    await pyodide.runPythonAsync(`
+import datetime as dt
+from typing import List, Dict, Any
+
+# === Minimal MSSA Engine in Browser ===
+MAHABOTE_DATA = {
+0: {'planet': 'Sun', 'value': 1, 'period': 6, 'house_name': 'Impermanence/Inconstant', 'sequence': [1,6,4,2,7,5,3]},
+1: {'planet': 'Moon', 'value': 2, 'period': 15, 'house_name': 'Extremity/Danger', 'sequence': [2,7,5,3,1,6,4]},
+2: {'planet': 'Mars', 'value': 3, 'period': 8, 'house_name': 'Fame/Courage', 'sequence': [3,1,6,4,2,7,5]},
+3: {'planet': 'Mercury', 'value': 4, 'period': 17, 'house_name': 'Wealth/Respect', 'sequence': [4,2,7,5,3,1,6]},
+4: {'planet': 'Jupiter', 'value': 5, 'period': 19, 'house_name': 'Kingly Position', 'sequence': [5,3,1,6,4,2,7]},
+5: {'planet': 'Venus', 'value': 6, 'period': 21, 'house_name': 'Sickly/Change', 'sequence': [6,4,2,7,5,3,1]},
+6: {'planet': 'Saturn', 'value': 7, 'period': 10, 'house_name': 'Leader/Counselor', 'sequence': [7,5,3,1,6,4,2]},
+7: {'planet': 'Rahu', 'value': 8, 'period': 12, 'house_name': 'Extremity/Inconstancy', 'sequence': [8,5,3,1,6,4,2]},
+}
+
+HOUSE_MAP = {
+1: {'planet_value':1,'name':'Impermanence','ruler':'Sun'},
+2: {'planet_value':2,'name':'Extremity','ruler':'Moon'},
+3: {'planet_value':3,'name':'Fame','ruler':'Mars'},
+4: {'planet_value':4,'name':'Wealth','ruler':'Mercury'},
+5: {'planet_value':5,'name':'Kingly Position','ruler':'Jupiter'},
+6: {'planet_value':6,'name':'Sickly/Change','ruler':'Venus'},
+0: {'planet_value':7,'name':'Leader','ruler':'Saturn'},
+}
+
+class MSSAPredictor:
+    def calculate_mahabote_house(self,dob: dt.date, current_date: dt.date, day_value:int) -> Dict[str,Any]:
+        age = current_date.year - dob.year - ((current_date.month,current_date.day)<(dob.month,dob.day))
+        rem = (age+day_value)%7
+        house_result = HOUSE_MAP.get(rem if rem!=0 else 0)
+        return {"age":age,"current_house_remainder":rem if rem!=0 else 7,"house_info":house_result}
+
+    def generate_life_journey_map(self,dob:dt.date,birth_day_idx:int) -> List[Dict[str,Any]]:
+        journey=[]
+        cur_date=dob
+        start_val=MAHABOTE_DATA[birth_day_idx]['value']
+        for i in range(7):
+            if start_val==8 and i==0:
+                val=8
+            elif start_val==8:
+                val=(i)%7
+                if val==0: val=7
+            else:
+                val=(start_val+i)%7
+                if val==0: val=7
+            data=next((d for d in MAHABOTE_DATA.values() if d['value']==val),None)
+            if data:
+                start=cur_date.strftime("%Y-%m-%d")
+                end=(cur_date.replace(year=cur_date.year+data['period'])).strftime("%Y-%m-%d")
+                journey.append({"period":i+1,"house_value":val,"house_name":data['house_name'],
+                                "duration":data['period'],"start_date":start,"end_date":end})
+                cur_date=cur_date.replace(year=cur_date.year+data['period'])
+        return journey
+
+    def generate_guidance(self,name:str,birth_date:str,house_cycle:int) -> Dict[str,Any]:
+        dob=dt.datetime.strptime(birth_date,"%Y-%m-%d").date()
+        cur_date=dt.date.today()
+        house_info=self.calculate_mahabote_house(dob,cur_date,house_cycle)
+        journey=self.generate_life_journey_map(dob,house_cycle)
+        return {"guidance":f"Dear {name}, your current Mahabote House is {house_info['house_info']['name']}.",
+                "score":house_info['current_house_remainder'],
+                "journey":journey}
+
+engine = MSSAPredictor()
+`);
+
+    const pyResult = await pyodide.runPythonAsync(`
+engine.generate_guidance("${name}", "${birth_date}", ${house_cycle})
+`);
+    
+    document.getElementById('output').innerHTML = `<pre>${JSON.stringify(pyResult.toJs(), null, 2)}</pre>`;
+}
+
+document.getElementById('runBtn').addEventListener('click', runMSSA);
+</script>
+
+</body>
+</html>
