@@ -150,12 +150,3 @@ class MSSAPredictor:
         }
 
 
-# === 5. OPTIONAL TEST RUN ===
-if __name__ == "__main__":
-    dob_sample = dt.date(1967, 5, 30)
-    current_house = calculate_mahabote_house(dob_sample, dt.date.today(), 3)
-    journey = generate_life_journey_map(dob_sample, 3)
-    print("Current Mahabote House:", current_house)
-    print("Life Journey Map:")
-    for p in journey:
-        print(f"Period {p['period_index']}: {p['house_name']} ({p['start_date']} → {p['end_date']})")
