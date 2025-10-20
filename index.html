@@ -112,3 +112,18 @@ document.getElementById('runBtn').addEventListener('click', runMSSA);
 
 </body>
 </html>
+<script type="module">
+  import init from 'https://cdn.jsdelivr.net/npm/pyodide@0.28.3/full/pyodide.js';
+
+  async function loadPyodideAndRun() {
+    const pyodide = await init();
+    await pyodide.loadPackage(['numpy', 'pandas']);
+    const result = await pyodide.runPythonAsync(`
+      import numpy as np
+      np.array([1, 2, 3])
+    `);
+    console.log(result);
+  }
+
+  loadPyodideAndRun();
+</script>
